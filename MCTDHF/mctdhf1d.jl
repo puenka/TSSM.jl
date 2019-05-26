@@ -2,6 +2,8 @@ using TSSM
 using Combinatorics
 using LinearAlgebra
 
+COUNT_B = 0
+
 function sign(p::Array{Int,1})
     n = length(p)
     k = 0    
@@ -400,7 +402,7 @@ using HDF5
 function TSSM.save(psi::WfMCTDHF1D, filename::AbstractString)
     st = psi.m.spin_restricted ? 2 : 1
     for k=1:st:psi.m.N
-       save(psi.o[k].phi, filename, string("orbital_",k, "_real"),
+       TSSM.save(psi.o[k].phi, filename, string("orbital_",k, "_real"),
              string("orbital_", k, "_imag", ), append=(k>1))
     end
     h5open(filename,"r+") do file 
@@ -730,6 +732,7 @@ end
 
 function gen_rhs!(rhs::WfMCTDHF1D, psi::WfMCTDHF1D; include_kinetic_part::Bool=false, 
                    include_one_particle_potential_part::Bool=true )
+    global COUNT_B += 1
     if rhs.m ≠ psi.m
         error("rhs and psi must belong to the same method")
     end
