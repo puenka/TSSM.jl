@@ -996,25 +996,22 @@ function finalize!(method::AdaptiveTimePropagationMethod, psi::WaveFunction,
          t0::Real, tend::Real, tol::Real, dt::Real, t::Real)
 end     
 
-function Base.start(tsi::AdaptiveTimeStepper) 
-    set_propagate_time_together_with_A!(tsi.psi.m, true)
-    set_time!(tsi.psi, tsi.t0)
-    initialize!(tsi.method, tsi.psi, tsi.t0, tsi.tend, tsi.tol, tsi.dt)
-    tsi.t0
-end
-
-function Base.done(tsi::AdaptiveTimeStepper, t::Real) 
-    f = (t>=tsi.tend )
-    if f 
-        finalize!(tsi.method, tsi.psi, tsi.t0, tsi.tend, tsi.tol, tsi.dt, t)
+function Base.iterate(tsi::AdaptiveTimeStepper, t::Real=0)
+    # TODO hack, tend <= 0 cannot be used
+    if t == 0
+        set_propagate_time_together_with_A!(tsi.psi.m, true)
+        set_time!(tsi.psi, tsi.t0)
+        step = initialize!(tsi.method, tsi.psi, tsi.t0, tsi.tend, tsi.tol, tsi.dt)
     end
-    f    
-end
     
-function Base.next(tsi::AdaptiveTimeStepper, t::Real)    
+    if t >= tsi.tend
+        finalize!(tsi.method, tsi.psi, tsi.t0, tsi.tend, tsi.tol, tsi.dt, t)
+        return nothing
+    end
+    
     (tnew, dtnew) = step!(tsi.method, tsi.psi, tsi.t0, tsi.tend, tsi.tol, tsi.dt, t)
     tsi.dt = dtnew
-    (tnew, tsi), tnew 
+    return (tnew, tsi), tnew 
 end
 
 ########################################################################################
